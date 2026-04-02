@@ -31,32 +31,6 @@ export function getAQIBgClass(aqi: number): string {
   return "bg-aqi-hazardous";
 }
 
-function generateReading(base?: SensorReading): SensorReading {
-  const now = new Date();
-  const b = base || { aqi: 72, temperature: 26, humidity: 55, gasLevel: 120, dustPM: 35 };
-  return {
-    timestamp: now.toISOString(),
-    aqi: Math.max(0, Math.min(500, b.aqi + (Math.random() - 0.5) * 20)),
-    temperature: Math.max(-10, Math.min(50, b.temperature + (Math.random() - 0.5) * 2)),
-    humidity: Math.max(0, Math.min(100, b.humidity + (Math.random() - 0.5) * 5)),
-    gasLevel: Math.max(0, Math.min(1000, b.gasLevel + (Math.random() - 0.5) * 30)),
-    dustPM: Math.max(0, Math.min(500, b.dustPM + (Math.random() - 0.5) * 10)),
-  };
-}
-
-function generateHistory(count: number): SensorReading[] {
-  const readings: SensorReading[] = [];
-  let current: SensorReading | undefined;
-  for (let i = count; i >= 0; i--) {
-    current = generateReading(current);
-    const t = new Date();
-    t.setMinutes(t.getMinutes() - i * 5);
-    current.timestamp = t.toISOString();
-    readings.push({ ...current });
-  }
-  return readings;
-}
-
 export function useAirQualityData() {
   const [latest, setLatest] = useState<SensorReading | null>(null);
   const [history, setHistory] = useState<SensorReading[]>([]);
@@ -64,27 +38,58 @@ export function useAirQualityData() {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
-  const fetchData = useCallback(() => {
+  const fetchData = useCallback(async () => {
     try {
-      const hist = history.length > 0 ? history : generateHistory(48);
-      const newReading = generateReading(hist[hist.length - 1]);
-      const updatedHistory = [...hist.slice(-47), newReading];
-      setHistory(updatedHistory);
-      setLatest(newReading);
+      const histRes = await fetch("http://localhost:5000/api/history");
+      const latestRes = await fetch("http://localhost:5000/api/latest");
+      
+      if (!histRes.ok || !latestRes.ok) {
+         if (histRes.status === 404 || latestRes.status === 404) {
+             setError("No sensor data found yet. Please start sending ESP32 data.");
+             setLoading(false);
+             return;
+         }
+         throw new Error("Failed to fetch");
+      }
+
+      const histData = await histRes.json();
+      const latestData = await latestRes.json();
+
+      if (histData.success && histData.data) {
+        const mappedHistory = histData.data.map((r: any) => ({
+           timestamp: r.timestamp,
+           aqi: r.aqi,
+           temperature: r.temperature,
+           humidity: r.humidity,
+           gasLevel: r.gas, // Map backend 'gas' to frontend 'gasLevel'
+           dustPM: r.dust    // Map backend 'dust' to frontend 'dustPM'
+        })).reverse();
+        setHistory(mappedHistory);
+      }
+      
+      if (latestData.success && latestData.data) {
+        const r = latestData.data;
+        setLatest({
+           timestamp: r.timestamp,
+           aqi: r.aqi,
+           temperature: r.temperature,
+           humidity: r.humidity,
+           gasLevel: r.gas,
+           dustPM: r.dust
+        });
+      }
+
       setLastUpdated(new Date());
       setLoading(false);
       setError(null);
     } catch {
-      setError("Failed to fetch sensor data");
+      setError("Failed to connect to backend Server on 5000");
       setLoading(false);
     }
-  }, [history]);
+  }, []);
 
   useEffect(() => {
     fetchData();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
     const interval = setInterval(fetchData, 5000);
     return () => clearInterval(interval);
   }, [fetchData]);
