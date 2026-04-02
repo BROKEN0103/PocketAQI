@@ -24,6 +24,11 @@ exports.createSensorData = async (req, res) => {
     
     const alert = getAlertLevel(aqi, gas);
     
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('newSensorData', { success: true, data: newSensor, alert: alert });
+    }
+    
     res.status(201).json({
       success: true,
       message: 'Sensor data saved successfully',

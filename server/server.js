@@ -3,10 +3,25 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const morgan = require('morgan');
+const http = require('http');
+const { Server } = require('socket.io');
 
 const sensorRoutes = require('./routes/sensorRoutes');
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: { origin: '*' }
+});
+
+app.set('io', io);
+
+io.on('connection', (socket) => {
+  console.log('New client connected:', socket.id);
+  socket.on('disconnect', () => {
+    console.log('Client disconnected:', socket.id);
+  });
+});
 
 // Middleware
 app.use(cors());
@@ -34,7 +49,7 @@ const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/aqis';
 mongoose.connect(MONGO_URI)
   .then(() => {
     console.log('Connected to MongoDB');
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+    server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
   })
   .catch((error) => {
     console.error('MongoDB connection error:', error);
