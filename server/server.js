@@ -7,6 +7,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 
 const sensorRoutes = require('./routes/sensorRoutes');
+const aiRoutes = require('./routes/aiRoutes');
 
 const app = express();
 const server = http.createServer(app);
@@ -30,6 +31,7 @@ app.use(morgan('dev')); // Logging incoming data
 
 // Mount Routes
 app.use('/api', sensorRoutes);
+app.use('/api', aiRoutes);
 
 // General Root Endpoint
 app.get('/', (req, res) => {
