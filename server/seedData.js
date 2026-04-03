@@ -4,10 +4,11 @@ const API_URL = 'http://localhost:5000/api/sensor';
 const API_KEY = 'esp32_secret_key_change_me';
 
 const locations = [
-  { lat: 40.7128, lon: -74.0060, name: 'Manhattan' },
-  { lat: 40.6782, lon: -73.9442, name: 'Brooklyn' },
-  { lat: 40.7282, lon: -73.7949, name: 'Queens' },
-  { lat: 40.8448, lon: -73.8648, name: 'Bronx' }
+  { lat: 18.5074, lon: 73.8077, name: 'Kothrud' },
+  { lat: 18.5679, lon: 73.9143, name: 'Viman Nagar' },
+  { lat: 18.5913, lon: 73.7389, name: 'Hinjewadi IT Park' },
+  { lat: 18.5089, lon: 73.9259, name: 'Hadapsar' },
+  { lat: 18.5147, lon: 73.8758, name: 'Pune Camp' }
 ];
 
 const seed = async () => {
