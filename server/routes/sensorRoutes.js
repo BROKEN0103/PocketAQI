@@ -9,5 +9,6 @@ router.post('/sensor', auth, validateSensorData, sensorController.createSensorDa
 router.get('/latest', sensorController.getLatestData);
 router.get('/history', sensorController.getHistoryData);
 router.get('/analytics', sensorController.getAnalyticsData);
+router.get('/map-data', sensorController.getMapData);
 
 module.exports = router;

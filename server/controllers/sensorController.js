@@ -17,9 +17,9 @@ const getAlertLevel = (aqi, gas) => {
 
 exports.createSensorData = async (req, res) => {
   try {
-    const { aqi, dust, gas, temperature, humidity } = req.body;
+    const { aqi, dust, gas, temperature, humidity, lat, lon } = req.body;
     
-    const newSensor = new Sensor({ aqi, dust, gas, temperature, humidity });
+    const newSensor = new Sensor({ aqi, dust, gas, temperature, humidity, lat, lon });
     await newSensor.save();
     
     const alert = getAlertLevel(aqi, gas);
@@ -87,6 +87,37 @@ exports.getAnalyticsData = async (req, res) => {
     res.json({ success: true, data: analytics[0] });
   } catch (error) {
     console.error('Error calculating analytics:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+exports.getMapData = async (req, res) => {
+  try {
+    const mapData = await Sensor.aggregate([
+      {
+        $sort: { timestamp: -1 }
+      },
+      {
+        $group: {
+          _id: { lat: '$lat', lon: '$lon' },
+          id: { $first: '$_id' },
+          aqi: { $first: '$aqi' },
+          dust: { $first: '$dust' },
+          gas: { $first: '$gas' },
+          temperature: { $first: '$temperature' },
+          humidity: { $first: '$humidity' },
+          lat: { $first: '$lat' },
+          lon: { $first: '$lon' },
+          timestamp: { $first: '$timestamp' }
+        }
+      },
+      {
+        $project: { _id: 0 }
+      }
+    ]);
+    res.json({ success: true, data: mapData });
+  } catch (error) {
+    console.error('Error fetching map data:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };

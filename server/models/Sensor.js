@@ -6,6 +6,8 @@ const sensorSchema = new mongoose.Schema({
   gas: { type: Number, required: true },
   temperature: { type: Number, required: true },
   humidity: { type: Number, required: true },
+  lat: { type: Number, required: true },
+  lon: { type: Number, required: true },
   timestamp: { type: Date, default: Date.now }
 });
 

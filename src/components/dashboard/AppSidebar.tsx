@@ -1,4 +1,4 @@
-import { LayoutDashboard, BarChart3, Settings, Wind } from "lucide-react";
+import { LayoutDashboard, BarChart3, Settings, Wind, Map } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
 import {
@@ -9,6 +9,7 @@ import {
 
 const items = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
+  { title: "Live Map", url: "/map", icon: Map },
   { title: "Analytics", url: "/analytics", icon: BarChart3 },
   { title: "Settings", url: "/settings", icon: Settings },
 ];
