@@ -61,8 +61,9 @@ export function PuneMapFixed() {
   // Data Sync Effect
   useEffect(() => {
     const fetchData = async () => {
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || ""; // Default uses proxy/relative path
       try {
-        const response = await fetch('/api/map-data');
+        const response = await fetch(`${baseUrl}/api/map-data`);
         if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
         const json = await response.json();
         if (json.success && Array.isArray(json.data)) {

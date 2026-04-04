@@ -39,9 +39,10 @@ export function useAirQualityData() {
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
   const fetchData = useCallback(async () => {
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
     try {
-      const histRes = await fetch("http://localhost:5000/api/history");
-      const latestRes = await fetch("http://localhost:5000/api/latest");
+      const histRes = await fetch(`${baseUrl}/api/history`);
+      const latestRes = await fetch(`${baseUrl}/api/latest`);
       
       if (!histRes.ok || !latestRes.ok) {
          if (histRes.status === 404 || latestRes.status === 404) {

@@ -17,6 +17,7 @@ const getAlertLevel = (aqi, gas) => {
 
 exports.createSensorData = async (req, res) => {
   try {
+    console.log('Incoming ESP32 Data:', req.body);
     const { aqi, dust, gas, temperature, humidity, lat, lon } = req.body;
     
     const newSensor = new Sensor({ aqi, dust, gas, temperature, humidity, lat, lon });
@@ -36,6 +37,40 @@ exports.createSensorData = async (req, res) => {
     });
   } catch (error) {
     console.error('Error saving sensor data:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+exports.createTestData = async (req, res) => {
+  try {
+    const dummyData = {
+      aqi: Math.floor(Math.random() * 500),
+      dust: Math.floor(Math.random() * 200),
+      gas: Math.floor(Math.random() * 1500),
+      temperature: 20 + Math.random() * 15,
+      humidity: 40 + Math.random() * 40,
+      lat: 18.5204 + (Math.random() - 0.5) * 0.1,
+      lon: 73.8567 + (Math.random() - 0.5) * 0.1
+    };
+
+    const newSensor = new Sensor(dummyData);
+    await newSensor.save();
+
+    const alert = getAlertLevel(dummyData.aqi, dummyData.gas);
+    
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('newSensorData', { success: true, data: newSensor, alert: alert });
+    }
+
+    res.status(201).json({
+      success: true,
+      message: 'Test sensor data generated successfully',
+      data: newSensor,
+      alert: alert
+    });
+  } catch (error) {
+    console.error('Error creating test data:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };
