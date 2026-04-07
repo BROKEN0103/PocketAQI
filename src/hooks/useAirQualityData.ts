@@ -90,8 +90,40 @@ export function useAirQualityData() {
   }, []);
 
   useEffect(() => {
+    // Initial load
     fetchData();
-    const interval = setInterval(fetchData, 5000);
+
+    // Import and setup socket
+    import('../lib/socket').then(({ socket }) => {
+      socket.on('newSensorData', (push: { success: boolean; data: any }) => {
+        if (push.success && push.data) {
+          const r = push.data;
+          const newReading = {
+            timestamp: r.timestamp,
+            aqi: r.aqi,
+            temperature: r.temperature,
+            humidity: r.humidity,
+            gasLevel: r.gas,
+            dustPM: r.dust
+          };
+
+          // Update latest instantly
+          setLatest(newReading);
+          // Update local history array instantly
+          setHistory(prev => [newReading, ...prev.slice(0, 99)]);
+          setLastUpdated(new Date());
+          setError(null);
+          console.log("Real-time Push: Synced with ESP32.");
+        }
+      });
+
+      return () => {
+        socket.off('newSensorData');
+      };
+    });
+
+    // Fallback Polling (Every 10 seconds now to reduce load)
+    const interval = setInterval(fetchData, 10000);
     return () => clearInterval(interval);
   }, [fetchData]);
 

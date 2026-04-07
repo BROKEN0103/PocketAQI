@@ -78,7 +78,32 @@ export function PuneMapFixed() {
     };
 
     fetchData();
-    const timer = setInterval(fetchData, 5000);
+
+    // Setup Socket Listener for Real-time Marker Updates
+    import('../../lib/socket').then(({ socket }) => {
+      socket.on('newSensorData', (push: { success: boolean; data: any }) => {
+        if (push.success && push.data) {
+          const r = push.data;
+          setSensors(prev => {
+            // Check if we already have this sensor (matching lat/lon) to update it, or add new
+            const exists = prev.findIndex(s => s.lat === r.lat && s.lon === r.lon);
+            if (exists !== -1) {
+              const updated = [...prev];
+              updated[exists] = r;
+              return updated;
+            }
+            return [r, ...prev];
+          });
+          console.log("Map: Real-time update received.");
+        }
+      });
+
+      return () => {
+        socket.off('newSensorData');
+      };
+    });
+
+    const timer = setInterval(fetchData, 30000); // Polling reduced to 30s as fallback
     return () => clearInterval(timer);
   }, []);
 
