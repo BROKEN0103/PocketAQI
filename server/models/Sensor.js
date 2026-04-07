@@ -8,6 +8,7 @@ const sensorSchema = new mongoose.Schema({
   humidity: { type: Number, required: true },
   lat: { type: Number, required: true },
   lon: { type: Number, required: true },
+  location: { type: String, default: 'ESP32 Device' },
   timestamp: { type: Date, default: Date.now }
 });
 

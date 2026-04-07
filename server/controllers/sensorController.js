@@ -41,40 +41,35 @@ exports.createSensorData = async (req, res) => {
   }
 };
 
-exports.createTestData = async (req, res) => {
+exports.createTestSensorData = async (req, res) => {
   try {
-    const dummyData = {
-      aqi: Math.floor(Math.random() * 500),
-      dust: Math.floor(Math.random() * 200),
-      gas: Math.floor(Math.random() * 1500),
-      temperature: 20 + Math.random() * 15,
-      humidity: 40 + Math.random() * 40,
-      lat: 18.5204 + (Math.random() - 0.5) * 0.1,
-      lon: 73.8567 + (Math.random() - 0.5) * 0.1
-    };
-
-    const newSensor = new Sensor(dummyData);
-    await newSensor.save();
-
-    const alert = getAlertLevel(dummyData.aqi, dummyData.gas);
+    const { aqi, dust, gas, temperature, humidity, lat, lon } = req.body;
     
+    const newSensor = new Sensor({ aqi, dust, gas, temperature, humidity, lat, lon });
+    // Intentionally NOT saving to the database to keep test data from polluting production data
+    // await newSensor.save(); 
+    
+    const alert = getAlertLevel(aqi, gas);
+    
+    // We optionally emit it so UI testers can see it on the frontend
     const io = req.app.get('io');
     if (io) {
       io.emit('newSensorData', { success: true, data: newSensor, alert: alert });
     }
-
-    res.status(201).json({
+    
+    res.status(200).json({
       success: true,
-      message: 'Test sensor data generated successfully',
-      data: newSensor,
-      alert: alert
+      message: 'Test data received successfully (not saved to DB)',
+      alert: alert,
+      data: newSensor
     });
   } catch (error) {
-    console.error('Error creating test data:', error);
+    console.error('Error handling test sensor data:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };
 
+// Code block removed
 exports.getLatestData = async (req, res) => {
   try {
     const latest = await Sensor.findOne().sort({ timestamp: -1 });
