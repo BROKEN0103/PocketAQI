@@ -8,6 +8,7 @@ const { Server } = require('socket.io');
 
 const sensorRoutes = require('./routes/sensorRoutes');
 const aiRoutes = require('./routes/aiRoutes');
+const simulationService = require('./services/simulationService');
 
 const app = express();
 const server = http.createServer(app);
@@ -51,7 +52,11 @@ const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/aqis';
 mongoose.connect(MONGO_URI)
   .then(() => {
     console.log('Connected to MongoDB successfully');
-    server.listen(PORT, '0.0.0.0', () => console.log(`Server running on port ${PORT}`));
+    server.listen(PORT, '0.0.0.0', () => {
+      console.log(`Server running on port ${PORT}`);
+      // Start Pune Live Simulation
+      simulationService.startSimulation(io);
+    });
   })
   .catch((error) => {
     console.error('CRITICAL: MongoDB connection error. Check MONGO_URI environment variable:', error.message);
