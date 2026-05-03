@@ -9,6 +9,7 @@ const { Server } = require('socket.io');
 const sensorRoutes = require('./routes/sensorRoutes');
 const aiRoutes = require('./routes/aiRoutes');
 const simulationService = require('./services/simulationService');
+const esp32PollService = require('./services/esp32PollService');
 
 const app = express();
 const server = http.createServer(app);
@@ -54,8 +55,12 @@ mongoose.connect(MONGO_URI)
     console.log('Connected to MongoDB successfully');
     server.listen(PORT, '0.0.0.0', () => {
       console.log(`Server running on port ${PORT}`);
-      // Start Pune Live Simulation
-      simulationService.startSimulation(io);
+      // Start Pune Live Simulation or ESP32 Polling
+      if (process.env.USE_FIRMWARE_POLLING === 'true') {
+        esp32PollService.startPolling(io);
+      } else {
+        simulationService.startSimulation(io);
+      }
     });
   })
   .catch((error) => {
